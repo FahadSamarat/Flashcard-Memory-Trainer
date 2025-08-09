@@ -71,7 +71,6 @@ The SuperMemo 2 algorithm is implemented with the following grade scale:
 - **2**: Good (Correct response recalled with serious difficulty)
 - **3**: Good (Correct response with some hesitation)
 - **4**: Easy (Correct response with perfect recall)
-- **5**: Easy (Correct response with perfect recall)
 
 ### Algorithm Logic
 1. **Grade < 3**: Reset to learning phase (repetition = 0, interval = 1 day)
