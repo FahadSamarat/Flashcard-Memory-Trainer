@@ -1,30 +1,27 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
+const cors = require('cors');
 const pg = require("pg");
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const verifyToken = require('./middleware/verifyToken');
+
+// cors
+app.use(cors());
 
 // Import routes
+const authRouter = require('./routes/auth');
 const cardsRouter = require('./routes/cards');
 const decksRouter = require('./routes/decks');
 
 app.use(express.json());
 
-// Enable CORS for development
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
-});
+
 
 // Routes
-app.use('/api/cards', cardsRouter);
-app.use('/api/decks', decksRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/cards', verifyToken, cardsRouter);
+app.use('/api/decks', verifyToken, decksRouter);
 
 app.get("/", (req, res) => {
     res.send("<h1>Flashcard Memory Trainer API</h1><p>Use /api/cards or /api/decks endpoints</p>");

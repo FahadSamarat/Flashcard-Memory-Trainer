@@ -1,5 +1,8 @@
 @import "tailwindcss";
+@plugin "flowbite-react/plugin/tailwindcss";
+@source "../.flowbite-react/class-list.json";
 
 body {
-  background-color: #29774a;
+  background: linear-gradient(135deg, #373659 0%, #4a4087 100%);
+  min-height: 100vh;
 }
