@@ -24,7 +24,11 @@ export default function Layout({ children }) {
   const isHomePage = location.pathname === "/";
   const isDecksActive = location.pathname.startsWith("/decks");
   const navClass = (active) =>
-    `${active ? "text-[#5dd39e]" : "hover:text-gray-500"} transition-colors`;
+    `${
+      active
+        ? "text-[#5CBDEB] font-semibold"
+        : "hover:text-[color:var(--color-muted)]"
+    }`;
   const [openModal, setOpenModal] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -107,10 +111,10 @@ export default function Layout({ children }) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col text-[color:var(--color-text)]">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-bg-[#00a6fb]/60 to-transparent backdrop-blur-md text-white flex items-center h-14">
-        <h1 className="text-xl font-bold mr-16 pl-4 h-full pt-2.5">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[color:var(--color-bg-2)]/75 backdrop-blur-md text-[color:var(--color-text)] shadow-sm flex items-center h-14 border-b border-[color:var(--color-primary)]/30">
+        <h1 className="text-xl font-bold mr-16 pl-4 h-full pt-2.5 text-[color:var(--color-accent)]">
           Flashcard Memory Trainer
         </h1>
         <ul className="flex space-x-6 text-lg">
@@ -119,7 +123,7 @@ export default function Layout({ children }) {
               <li>
                 <a
                   href="#home"
-                  className="hover:text-gray-500 transition-colors"
+                  className="hover:text-[color:var(--color-accent)] transition-colors"
                 >
                   Home
                 </a>
@@ -127,7 +131,7 @@ export default function Layout({ children }) {
               <li>
                 <a
                   href="#about"
-                  className="hover:text-gray-500 transition-colors"
+                  className="hover:text-[color:var(--color-accent)] transition-colors"
                 >
                   About
                 </a>
@@ -138,7 +142,7 @@ export default function Layout({ children }) {
               <li>
                 <Link
                   to="/#home"
-                  className="hover:text-gray-500 transition-colors"
+                  className="hover:text-[color:var(--color-accent)] transition-colors"
                 >
                   Home
                 </Link>
@@ -146,7 +150,7 @@ export default function Layout({ children }) {
               <li>
                 <Link
                   to="/#about"
-                  className="hover:text-gray-500 transition-colors"
+                  className="hover:text-[color:var(--color-accent)] transition-colors"
                 >
                   About
                 </Link>
@@ -165,16 +169,16 @@ export default function Layout({ children }) {
           {!authUser ? (
             <>
               <Button
-                className="cursor-pointer border-none"
-                color="dark"
+                className="cursor-pointer border-none bg-[color:var(--color-primary)] text-[color:var(--color-bg-2)] hover:bg-[color:var(--color-primary-700)]"
+                color="light"
                 size="sm"
                 onClick={() => setOpenModal(true)}
               >
                 Log In
               </Button>
               <Button
-                className="cursor-pointer bg-gradient-to-r from-cyan-500 to-blue-500"
-                color="purple"
+                className="cursor-pointer bg-gradient-to-br from-green-400 to-blue-600 text-white hover:bg-gradient-to-bl hover:opacity-90"
+                color="dark"
                 size="sm"
                 onClick={() => setOpenSignup(true)}
               >
@@ -195,14 +199,18 @@ export default function Layout({ children }) {
               }
             >
               <DropdownHeader>
-                <span className="block text-sm">{authUser.name}</span>
-                <span className="block truncate text-sm font-medium">
-                  {authUser.email}
+                <span className="block text-sm text-center font-medium mb-2.5">
+                  {authUser.name}
                 </span>
+                <span className="block truncate text-sm">{authUser.email}</span>
               </DropdownHeader>
-              <DropdownItem onClick={() => {}}>Profile</DropdownItem>
               <DropdownDivider />
-              <DropdownItem onClick={handleLogout}>Sign out</DropdownItem>
+              <DropdownItem
+                className=" block text-center"
+                onClick={handleLogout}
+              >
+                Sign out
+              </DropdownItem>
             </Dropdown>
           )}
         </div>
@@ -224,6 +232,7 @@ export default function Layout({ children }) {
                 <Label htmlFor="email">Your email</Label>
               </div>
               <TextInput
+                className="[&_input]:bg-white [&_input]:text-black"
                 id="email"
                 placeholder="name@company.com"
                 value={email}
@@ -236,6 +245,7 @@ export default function Layout({ children }) {
                 <Label htmlFor="password">Your password</Label>
               </div>
               <TextInput
+              className="[&_input]:bg-white [&_input]:text-black"
                 id="password"
                 type="password"
                 value={password}
@@ -243,9 +253,17 @@ export default function Layout({ children }) {
                 required
               />
             </div>
-            <div className="w-full">
+            <div className="w-full flex justify-end gap-2 pt-2">
               <Button
-                className="bg-gradient-to-r from-cyan-500 to-blue-500 cursor-pointer"
+                className="cursor-pointer"
+                color="light"
+                type="button"
+                onClick={onCloseModal}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="bg-gradient-to-br from-green-400 to-blue-600 text-white hover:bg-gradient-to-bl cursor-pointer"
                 onClick={handleLogin}
               >
                 Log in to your account
@@ -279,18 +297,24 @@ export default function Layout({ children }) {
             </h3>
             <form className="space-y-4" onSubmit={handleSignup}>
               <div>
+                <div className="mb-2 block">
+                  <Label htmlFor="password">Your Name</Label>
+                </div>
                 <Label htmlFor="signup-name" value="Full Name" />
                 <TextInput
                   id="signup-name"
                   type="text"
-                  placeholder="Name"
+                  placeholder="name"
                   required
                   value={signupName}
                   onChange={(e) => setSignupName(e.target.value)}
-                  className="mt-1"
+                  className="mt-1 [&_input]:bg-white [&_input]:text-black"
                 />
               </div>
               <div>
+                <div className="mb-2 block">
+                  <Label htmlFor="password">Your Email</Label>
+                </div>
                 <Label htmlFor="signup-email" value="Email" />
                 <TextInput
                   id="signup-email"
@@ -299,10 +323,13 @@ export default function Layout({ children }) {
                   required
                   value={signupEmail}
                   onChange={(e) => setSignupEmail(e.target.value)}
-                  className="mt-1"
+                  className="mt-1 [&_input]:bg-white [&_input]:text-black"
                 />
               </div>
               <div>
+                <div className="mb-2 block">
+                  <Label htmlFor="password">Your password</Label>
+                </div>
                 <Label htmlFor="signup-password" value="Password" />
                 <TextInput
                   id="signup-password"
@@ -310,15 +337,20 @@ export default function Layout({ children }) {
                   required
                   value={signupPassword}
                   onChange={(e) => setSignupPassword(e.target.value)}
-                  className="mt-1"
+                  className="mt-1 [&_input]:bg-white [&_input]:text-black"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <Button className="cursor-pointer" color="light" type="button" onClick={onCloseSignup}>
+                <Button
+                  className="cursor-pointer"
+                  color="light"
+                  type="button"
+                  onClick={onCloseSignup}
+                >
                   Cancel
                 </Button>
                 <Button
-                  className="cursor-pointer bg-gradient-to-r from-cyan-500 to-blue-500"
+                  className="cursor-pointer bg-gradient-to-br from-green-400 to-blue-600 text-white hover:bg-gradient-to-bl"
                   type="submit"
                 >
                   Sign Up
@@ -344,30 +376,30 @@ export default function Layout({ children }) {
       </Modal>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-6">
+      <footer className="bg-[color:var(--color-surface)] text-[var(--color-ink)] py-6 border-t border-[color:var(--color-accent)]/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-sm">
+              <p className=" text-gray-100 ">
                 &copy; 2025 Flashcard Memory Trainer. All rights reserved.
               </p>
             </div>
-            <div className="flex space-x-6">
+            <div className="flex space-x-6 text-gray-200">
               <a
                 href="#"
-                className="text-sm hover:text-gray-500 transition-colors"
+                className="text-sm hover:opacity-70 transition-colors"
               >
                 Privacy Policy
               </a>
               <a
                 href="#"
-                className="text-sm hover:text-gray-500 transition-colors"
+                className="text-sm hover:opacity-70 transition-colors"
               >
                 Terms of Service
               </a>
               <a
                 href="#"
-                className="text-sm hover:text-gray-500 transition-colors"
+                className="text-sm hover:opacity-70 transition-colors"
               >
                 Support
               </a>

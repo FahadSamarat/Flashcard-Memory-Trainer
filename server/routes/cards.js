@@ -4,59 +4,7 @@ const router = express.Router();
 const pg = require('pg');
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 
-// --- Learning configuration (Anki-like) ---
-// Steps for learning in minutes. Example: 1m, 10m. Graduation is handled separately.
-const LEARNING_STEPS_MIN = [1, 10];
-// Graduating intervals (in days)
-const GRADUATING_INTERVAL_DAYS = 1; // when pressing Good on the last learning step
-const EASY_GRADUATING_INTERVAL_DAYS = 4; // when pressing Easy on a new/learning card
 
-// SuperMemo-2 algorithm using quality 0..5 internally
-function supermemo2(quality, repetition, interval, ef) {
-  // quality: 0..5
-  // Normalize inputs to safe numeric defaults
-  const currentEf = Number.isFinite(Number(ef)) ? Number(ef) : 2.5;
-  const currentRepetition = Number.isFinite(Number(repetition)) ? Number(repetition) : 0;
-  const currentInterval = Number.isFinite(Number(interval)) ? Number(interval) : 1;
-  // If quality < 3 -> failure: reset repetition and schedule 1 day
-  if (quality < 3) {
-    // Move to learn and make due immediately. Keep interval at 1 to satisfy common DB constraints (> 0).
-    const decreasedEf = Math.max(
-      currentEf + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)),
-      1.3
-    );
-    return {
-      repetition: 1, // enter learning
-      interval: 1,
-      ef: decreasedEf,
-      nextReview: new Date(), // due now
-    };
-  }
-
-  // success
-  let newEf = currentEf + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
-  if (newEf < 1.3) newEf = 1.3;
-
-  let newRepetition = currentRepetition + 1;
-  let newInterval;
-
-  if (newRepetition === 1) {
-    newInterval = 1;
-  } else if (newRepetition === 2) {
-    newInterval = 6;
-  } else {
-    newInterval = Math.round(currentInterval * newEf);
-    if (newInterval < 1) newInterval = 1;
-  }
-
-  const nextReview = new Date(Date.now() + newInterval * 86400000);
-  return {
-    repetition: newRepetition,
-    interval: newInterval,
-    ef: newEf,
-    nextReview,
-  };
-}
 
 // Helper: map 1..4 (user) -> quality 0..5 (SM2)
 function mapGradeToQuality(grade) {
@@ -208,7 +156,7 @@ router.post('/', async (req, res) => {
     }
     const query = `
       INSERT INTO cards (front, back, deck_id, user_id, repetition, interval, ef, next_review, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, 0, 1, 2.5, $5, NOW(), NOW())
+      VALUES ($1, $2, $3, $4, 0, 0, 2.5, $5, NOW(), NOW())
       RETURNING *
     `;
     const nextReview = new Date(Date.now() + 1 * 86400000); // 1 day from now (default)
@@ -233,7 +181,7 @@ router.post('/:id/review', async (req, res) => {
     }
 
     const numericGrade = Number(grade);
-    const quality = mapGradeToQuality(numericGrade); // unused in simplified path, but kept for potential metrics
+    const quality = mapGradeToQuality(numericGrade);
 
     const client = await pool.connect();
     const getCardQuery = 'SELECT * FROM cards WHERE id = $1 AND user_id = $2';
@@ -246,7 +194,7 @@ router.post('/:id/review', async (req, res) => {
 
     const card = cardResult.rows[0];
 
-    // Simplified rules
+    // Scheduling helpers
     const todayStart = startOfToday();
     const scheduleDaysFromTodayMidnight = (days) => {
       const d = new Date(todayStart.getTime());
@@ -255,42 +203,55 @@ router.post('/:id/review', async (req, res) => {
     };
 
     let updatePayload;
-    const ef = Number(card.ef) || 2.5;
-    const factor = ef / 2.5; // >1 => longer, <1 => shorter
+    const ef = Number(card.ef) || 1.9;
+    const previousIntervalDays = Math.max(1, Number(card.interval) || 1);
+
+    // Ease factor update (SM-2 style)
+    const computeNextEf = (currentEf, q) => {
+      const newEf = currentEf + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
+      return Math.max(1.3, Number(newEf.toFixed(2)));
+    };
 
     if (numericGrade === 1) {
-      // Again: move to learn, immediate
+      // Lapse: back to learning, immediate retry, slightly reduce EF
       updatePayload = {
         repetition: 1,
-        interval: 1,
-        ef,
+        interval: 0,
+        ef: Math.max(1.3, Number((ef - 0.2).toFixed(2))),
         next_review: new Date(),
       };
-    } else if (numericGrade === 2) {
-      // Hard: ~2 days adjusted by EF
-      const days = Math.max(1, Math.round(2 * factor));
+    } else if (Number(card.repetition) <= 1) {
+      // New or learning card graduating
+      let days;
+      if (numericGrade === 2) days = 1;       // Hard -> 1 day
+      else if (numericGrade === 3) days = 2;  // Good -> 2 days
+      else days = 4;                           // Easy -> 4 days
+
       updatePayload = {
         repetition: 2,
         interval: days,
-        ef,
+        ef: computeNextEf(ef, quality),
         next_review: scheduleDaysFromTodayMidnight(days),
       };
-    } else if (numericGrade === 3) {
-      // Good: ~4 days adjusted by EF
-      const days = Math.max(1, Math.round(4 * factor));
+    } else {
+      // Review card (repetition >= 2)
+      const nextEf = computeNextEf(ef, quality);
+      let days;
+      if (numericGrade === 2) {
+        // Hard: grow slowly
+        days = Math.max(1, Math.round(previousIntervalDays * 1.2));
+      } else if (numericGrade === 3) {
+        // Good: multiply by EF
+        days = Math.max(1, Math.round(previousIntervalDays * nextEf));
+      } else {
+        // Easy: a bit more than good
+        days = Math.max(1, Math.round(previousIntervalDays * nextEf * 1.5));
+      }
+
       updatePayload = {
-        repetition: 2,
+        repetition: Number(card.repetition) + 1,
         interval: days,
-        ef,
-        next_review: scheduleDaysFromTodayMidnight(days),
-      };
-    } else if (numericGrade === 4) {
-      // Easy: ~8 days adjusted by EF
-      const days = Math.max(1, Math.round(8 * factor));
-      updatePayload = {
-        repetition: 2,
-        interval: days,
-        ef,
+        ef: nextEf,
         next_review: scheduleDaysFromTodayMidnight(days),
       };
     }
@@ -368,19 +329,68 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { front, back, deck_id } = req.body;
+    const { front, back, deck_id, next_review } = req.body;
     const userId = req.user?.id;
     const client = await pool.connect();
+    // Parse next_review if provided
+    let parsedNextReview = null;
+    const nextReviewProvided = next_review !== undefined;
+    if (nextReviewProvided) {
+      if (typeof next_review === 'string') {
+        const lowered = next_review.trim().toLowerCase();
+        if (lowered === 'now') {
+          parsedNextReview = new Date();
+        } else if (lowered === 'today') {
+          parsedNextReview = startOfToday();
+        } else if (lowered === 'tomorrow') {
+          const d = startOfToday();
+          d.setDate(d.getDate() + 1);
+          parsedNextReview = d;
+        } else {
+          const d = new Date(next_review);
+          if (isNaN(d.getTime())) {
+            client.release();
+            return res.status(400).json({ success: false, error: 'Invalid next_review. Use ISO date, timestamp, or "now"/"today"/"tomorrow".' });
+          }
+          parsedNextReview = d;
+        }
+      } else if (typeof next_review === 'number') {
+        const d = new Date(next_review);
+        if (isNaN(d.getTime())) {
+          client.release();
+          return res.status(400).json({ success: false, error: 'Invalid numeric next_review timestamp' });
+        }
+        parsedNextReview = d;
+      } else if (next_review instanceof Date) {
+        if (isNaN(next_review.getTime())) {
+          client.release();
+          return res.status(400).json({ success: false, error: 'Invalid Date object for next_review' });
+        }
+        parsedNextReview = next_review;
+      } else {
+        client.release();
+        return res.status(400).json({ success: false, error: 'Unsupported next_review type' });
+      }
+    }
+    const setters = [
+      'front = COALESCE($1, front)',
+      'back = COALESCE($2, back)',
+      'deck_id = COALESCE($3, deck_id)'
+    ];
+    const params = [front, back, deck_id];
+    if (nextReviewProvided) {
+      setters.push(`next_review = $${params.length + 1}::timestamptz`);
+      params.push(parsedNextReview);
+    }
+    setters.push('updated_at = NOW()');
+
     const query = `
       UPDATE cards
-      SET front = COALESCE($1, front),
-          back = COALESCE($2, back),
-          deck_id = COALESCE($3, deck_id),
-          updated_at = NOW()
-      WHERE id = $4 AND user_id = $5
+      SET ${setters.join(', ')}
+      WHERE id = $${params.length + 1} AND user_id = $${params.length + 2}
       RETURNING *
     `;
-    const result = await client.query(query, [front, back, deck_id, id, userId]);
+    const result = await client.query(query, [...params, id, userId]);
     client.release();
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Card not found' });

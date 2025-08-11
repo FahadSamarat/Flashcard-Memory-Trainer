@@ -91,10 +91,10 @@ export default function DeckReview({ deck, onBack }) {
 
   if (!currentCard) {
     return (
-      <div className="pt-16 flex flex-col items-center text-white">
+      <div className="pt-16 flex flex-col items-center text-[color:var(--color-text)]">
         <div className="w-full max-w-2xl px-4">
           <div className="flex justify-between mb-4">
-            <Button onClick={onBack}>← Back to Decks</Button>
+            <Button className="bg-[color:var(--color-primary)] hover:bg-[color:var(--color-primary-700)] text-[color:var(--color-bg-2)]" onClick={onBack}>← Back to Decks</Button>
             <div>{cards.length} cards remaining</div>
           </div>
           <Card>
@@ -107,37 +107,39 @@ export default function DeckReview({ deck, onBack }) {
   }
 
   return (
-    <div className="pt-16 flex flex-col items-center">
+    <div className="pt-16 flex flex-col items-center text-[color:var(--color-text)] mt-16">
       <div className="w-full max-w-2xl px-4">
         <div className="flex justify-between items-center mb-4">
-          <Button className="cursor-pointer" onClick={onBack}>← Back to Decks</Button>
-          <div className=" text-lg text-white ">
+          <Button className="cursor-pointer bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 text-white hover:bg-gradient-to-br" onClick={onBack}>← Back to Decks</Button>
+          <div className=" text-lg ">
             {idx + 1} / {cards.length} — {currentCard.repetition ? `rep:${currentCard.repetition}` : "new"}
           </div>
         </div>
 
         <Card className="text-center">
-          <h3 className="text-3xl font-bold text-gray-400">{deck.name}</h3>
-          <div className="mt-6 min-h-[120px] flex items-center justify-center text-2xl text-gray-300">
-            {showBack ? currentCard.back : currentCard.front}
+          <h3 className="text-3xl font-bold">{deck.name}</h3>
+          <div className="mt-6 min-h-[120px] flex items-center text-2xl text-[color:var(--color-text)]">
+            <div className="w-full text-center whitespace-normal break-words">
+              {showBack ? currentCard.back : currentCard.front}
+            </div>
           </div>
           <div className="flex justify-center mt-4 gap-4">
-            <Button className=" cursor-pointer " onClick={() => setShowBack(!showBack)}>{showBack ? "Show Front" : "Show Back"}</Button>
+            <Button className=" cursor-pointer bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 text-white hover:bg-gradient-to-br" onClick={() => setShowBack(!showBack)}>{showBack ? "Show Front" : "Show Back"}</Button>
           </div>
         </Card>
 
         {showBack && (
-          <div className="flex flex-wrap justify-center gap-3 mt-6">
-            <Button className=" cursor-pointer " onClick={() => gradeCard(1)} >
+          <div className="flex flex-wrap justify-center gap-3 mt-6 mb-6">
+            <Button className=" cursor-pointer bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white hover:bg-gradient-to-br" onClick={() => gradeCard(1)} >
               1 · Again
             </Button>
-            <Button className=" cursor-pointer " onClick={() => gradeCard(2)} >
+            <Button className=" cursor-pointer bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white hover:bg-gradient-to-br" onClick={() => gradeCard(2)} >
               2 · Hard
             </Button>
-            <Button className=" cursor-pointer " onClick={() => gradeCard(3)} >
+            <Button className=" cursor-pointer bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white hover:bg-gradient-to-br" onClick={() => gradeCard(3)} >
               3 · Good
             </Button>
-            <Button className=" cursor-pointer " onClick={() => gradeCard(4)} >
+            <Button className=" cursor-pointer bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white hover:bg-gradient-to-br" onClick={() => gradeCard(4)} >
               4 · Easy
             </Button>
           </div>

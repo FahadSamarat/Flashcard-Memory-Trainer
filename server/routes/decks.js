@@ -174,7 +174,7 @@ router.post('/:id/cards', async (req, res) => {
     }
     const insertQuery = `
       INSERT INTO cards (front, back, deck_id, user_id, repetition, interval, ef, next_review, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, 0, 1, 2.5, $5, NOW(), NOW())
+      VALUES ($1, $2, $3, $4, 0, 0, 2.5, $5, NOW(), NOW())
       RETURNING *
     `;
     const nextReview = new Date(Date.now() + 1 * 86400000);
