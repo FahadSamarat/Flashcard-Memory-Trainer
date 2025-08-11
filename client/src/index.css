@@ -1,8 +1,34 @@
 @import "tailwindcss";
-@plugin "flowbite-react/plugin/tailwindcss";
-@source "../.flowbite-react/class-list.json";
 
+
+/* Tailwind v4 theme tokens */
+@theme {
+  /* Blue-green mid palette */
+  --color-bg-1: #1E4E5F;           /* Background gradient end (lighter) */
+  --color-bg-2: #163E4A;           /* Background gradient start (darker) */
+  --color-surface: #275D6D;        /* Card/containers */
+  --color-text: #E8F3F6;           /* Primary text on dark */
+  --color-muted: #C3E1E5;          /* Muted text */
+  --color-primary: #33B1A6;        /* Teal primary */
+  --color-primary-700: #2A948A;    /* Darker primary */
+  --color-accent: #B8CFCE;         /* Blue accent */
+  /* Back-compat with earlier variable names */
+  --color-ink-contrast: var(--color-text);
+  --color-ink: #0F2A2E;
+  --color-bg: var(--color-bg-1);
+}
+
+/* Global base styles */
 body {
-  background: linear-gradient(135deg, #373659 0%, #4a4087 100%);
+  /* Mid-tone blue-green gradient */
+  background: linear-gradient(135deg, var(--color-bg-2) 0%, var(--color-bg-1) 100%);
+  color: var(--color-text);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Make default link color readable and aligned with theme */
+@layer base {
+  a { color: var(--color-muted); }
 }

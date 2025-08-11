@@ -135,12 +135,20 @@ export default function Decks() {
   };
 
   if (selectedDeck) {
-    return <DeckReview deck={selectedDeck} onBack={() => { setSelectedDeck(null); fetchDecks(); }} />;
+    return (
+      <DeckReview
+        deck={selectedDeck}
+        onBack={() => {
+          setSelectedDeck(null);
+          fetchDecks();
+        }}
+      />
+    );
   }
 
   if (loading) {
     return (
-      <div className="pt-16 flex w-full justify-center">
+      <div className="pt-16 flex w-full justify-center text-[color:var(--color-ink)]">
         <div className="text-center">Loading decks...</div>
       </div>
     );
@@ -155,175 +163,270 @@ export default function Decks() {
   }
 
   return (
-    <div className="pt-16 flex justify-center">
+    <div className="pt-16 flex justify-center flex-col items-center text-[color:var(--color-text)] my-12">
+      <h1 className="text-6xl font-bold mb-6 text-[color:var(--color-accent)]">
+        My Decks
+      </h1>
       <div className="w-full max-w-4xl">
         <div className="flex justify-end mb-3 px-1">
-          <Button onClick={() => setOpenDeckModal(true)}>
-            <span className="cursor-pointer flex items-center gap-2"><HiPlus /> Add Deck</span>
+          <Button
+            className="bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 text-white hover:bg-gradient-to-br "
+            onClick={() => setOpenDeckModal(true)}
+          >
+            <span className="cursor-pointer flex items-center gap-2">
+              <HiPlus /> Add Deck
+            </span>
           </Button>
         </div>
-        <div
-          className="bg-gray-800 overflow-x-auto rounded-lg shadow w-full relative min-h-[360px]"
-          style={{ overflowY: "visible" }}
-        >
-        <Table hoverable>
-          <TableHead className="bg-gray-600">
-            <TableRow>
-              <TableHeadCell>Deck</TableHeadCell>
-              <TableHeadCell>New</TableHeadCell>
-              <TableHeadCell>Learn</TableHeadCell>
-              <TableHeadCell>Due</TableHeadCell>
-              <TableHeadCell>Action</TableHeadCell>
-            </TableRow>
-          </TableHead>
-          <TableBody className="divide-y">
-            {decks.map((deck) => (
-              <TableRow key={deck.id} className="bg-white dark:border-gray-700 dark:bg-gray-800">
-                <TableCell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedDeck(deck)}
-                    className="text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
-                  >
-                    {deck.name}
-                  </button>
-                </TableCell>
-                <TableCell>{deck.new_count ?? 0}</TableCell>
-                <TableCell>{deck.learn_count ?? 0}</TableCell>
-                <TableCell>{deck.due_count ?? 0}</TableCell>
-                <TableCell>
-                  <Dropdown label="Actions" inline className="z-50">
-                    <DropdownItem icon={HiPlus} onClick={() => handleAddCard(deck)}>
-                      Add Card
-                    </DropdownItem>
-                    <DropdownItem icon={HiChartPie} onClick={() => handleOpenStats(deck)}>
-                      Stats
-                    </DropdownItem>
-                    <DropdownItem icon={HiTrash} onClick={() => handleDeleteDeck(deck.id)}>
-                      Delete Deck
-                    </DropdownItem>
-                  </Dropdown>
-                </TableCell>
+        <div>
+          <Table hoverable striped>
+            <TableHead className=" border-b-1">
+              <TableRow>
+                <TableHeadCell>Deck</TableHeadCell>
+                <TableHeadCell>New</TableHeadCell>
+                <TableHeadCell>Learn</TableHeadCell>
+                <TableHeadCell>Due</TableHeadCell>
+                <TableHeadCell>Action</TableHeadCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {decks.map((deck) => (
+                <TableRow className=" !bg-gray-800 hover:!bg-gray-700" key={deck.id}>
+                  <TableCell className="whitespace-nowrap font-medium">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDeck(deck)}
+                      className="text-[color:var(--color-text)] hover:text-[color:var(--color-accent)] cursor-pointer"
+                    >
+                      {deck.name}
+                    </button>
+                  </TableCell>
+                  <TableCell className=" text-blue-500">{deck.new_count ?? 0}</TableCell>
+                  <TableCell className=" text-red-500">{deck.learn_count ?? 0}</TableCell>
+                  <TableCell className=" text-green-500">{deck.due_count ?? 0}</TableCell>
+                  <TableCell className="text-gray-200 text-[14px]">
+                    <Dropdown label="Actions" inline className="z-50">
+                      <DropdownItem
+                        icon={HiPlus}
+                        onClick={() => handleAddCard(deck)}
+                      >
+                        Add Card
+                      </DropdownItem>
+                      <DropdownItem
+                        icon={HiChartPie}
+                        onClick={() => handleOpenStats(deck)}
+                      >
+                        Stats
+                      </DropdownItem>
+                      <DropdownItem
+                        icon={HiTrash}
+                        onClick={() => handleDeleteDeck(deck.id)}
+                      >
+                        Delete Deck
+                      </DropdownItem>
+                    </Dropdown>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
 
-      {/* Add Deck Modal */}
-      <Modal show={openDeckModal} onClose={() => setOpenDeckModal(false)} popup>
-        <ModalHeader />
-        <ModalBody>
-          <form onSubmit={submitNewDeck}>
-            <div className="space-y-6">
-              <h2 className="text-center text-xl font-medium text-gray-900 dark:text-white">Create New Deck</h2>
-              <div>
-                <div className="mb-2 block">
-                  <Label htmlFor="deckName">Name</Label>
+        {/* Add Deck Modal */}
+        <Modal
+          show={openDeckModal}
+          onClose={() => setOpenDeckModal(false)}
+          popup
+        >
+          <ModalHeader />
+          <ModalBody>
+            <form onSubmit={submitNewDeck}>
+              <div className="space-y-6">
+                <h2 className="text-center text-xl font-medium">
+                  Create New Deck
+                </h2>
+                <div>
+                  <div className="mb-2 block">
+                    <Label htmlFor="deckName">Name</Label>
+                  </div>
+                  <TextInput
+                    id="deckName"
+                    className="bg-[color:var(--color-bg-2)]/60 border-[color:var(--color-primary)]/50 text-[color:var(--color-text)] placeholder:[color:var(--color-muted)] [&_input]:bg-white [&_input]:text-black"
+                    placeholder="Enter deck name"
+                    value={deckName}
+                    onChange={(e) => setDeckName(e.target.value)}
+                    required
+                  />
                 </div>
-                <TextInput id="deckName" placeholder="Enter deck name" value={deckName} onChange={(e) => setDeckName(e.target.value)} required />
-              </div>
-              <div>
-                <div className="mb-2 block">
-                  <Label htmlFor="deckDescription">Description (optional)</Label>
+                <div>
+                  <div className="mb-2 block">
+                    <Label htmlFor="deckDescription">
+                      Description (optional)
+                    </Label>
+                  </div>
+                  <Textarea
+                    id="deckDescription"
+                    className="!bg-white !text-black placeholder:!text-gray-400"
+                    placeholder="Describe the deck"
+                    rows={3}
+                    value={deckDescription}
+                    onChange={(e) => setDeckDescription(e.target.value)}
+                  />
                 </div>
-                <Textarea id="deckDescription" placeholder="Describe the deck" rows={3} value={deckDescription} onChange={(e) => setDeckDescription(e.target.value)} />
-              </div>
-              <div className="w-full flex justify-center items-center">
-                <Button className="cursor-pointer" type="submit">Add Deck</Button>
-              </div>
-            </div>
-          </form>
-        </ModalBody>
-      </Modal>
-
-      <Modal show={openModal} onClose={() => setOpenModal(false)} popup>
-        <ModalHeader />
-        <ModalBody>
-          <form onSubmit={submitNewCard}>
-            <div className="space-y-6">
-              <h2 className="text-center text-xl font-medium text-gray-900 dark:text-white">{currentDeck?.name}</h2>
-
-              <div>
-                <div className="mb-2 block">
-                  <Label htmlFor="front">Front</Label>
+                <div className="w-full flex justify-center items-center">
+                  <Button
+                    className="cursor-pointer bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 text-white hover:bg-gradient-to-br"
+                    type="submit"
+                  >
+                    Add Deck
+                  </Button>
                 </div>
-                <TextInput id="front" placeholder="Enter front text" value={cardFront} onChange={(e) => setCardFront(e.target.value)} required />
               </div>
+            </form>
+          </ModalBody>
+        </Modal>
 
-              <div>
-                <div className="mb-2 block">
-                  <Label htmlFor="back">Back</Label>
+        <Modal show={openModal} onClose={() => setOpenModal(false)} popup>
+          <ModalHeader />
+          <ModalBody>
+            <form onSubmit={submitNewCard}>
+              <div className="space-y-6">
+                <h2 className="text-center text-xl font-medium">
+                  {currentDeck?.name}
+                </h2>
+
+                <div>
+                  <div className="mb-2 block">
+                    <Label htmlFor="front">Front</Label>
+                  </div>
+                  <TextInput
+                    id="front"
+                    className="bg-[color:var(--color-bg-2)]/60 border-[color:var(--color-primary)]/50 text-[color:var(--color-text)] placeholder:[color:var(--color-muted)]"
+                    placeholder="Enter front text"
+                    value={cardFront}
+                    onChange={(e) => setCardFront(e.target.value)}
+                    required
+                  />
                 </div>
-                <Textarea id="back" placeholder="Enter back text" rows={4} value={cardBack} onChange={(e) => setCardBack(e.target.value)} />
+
+                <div>
+                  <div className="mb-2 block">
+                    <Label htmlFor="back">Back</Label>
+                  </div>
+                  <Textarea
+                    id="back"
+                    className="bg-[color:var(--color-bg-2)]/60 border-[color:var(--color-primary)]/50 text-[color:var(--color-text)] placeholder:[color:var(--color-muted)]"
+                    placeholder="Enter back text"
+                    rows={4}
+                    value={cardBack}
+                    onChange={(e) => setCardBack(e.target.value)}
+                  />
+                </div>
+
+                <div className="w-full flex justify-center items-center">
+                  <Button
+                    className="bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 text-white hover:bg-gradient-to-br"
+                    type="submit"
+                  >
+                    Add Card
+                  </Button>
+                </div>
               </div>
+            </form>
+          </ModalBody>
+        </Modal>
 
-              <div className="w-full flex justify-center items-center">
-                <Button type="submit">Add Card</Button>
-              </div>
-            </div>
-          </form>
-        </ModalBody>
-      </Modal>
+        {/* Stats Modal */}
+        <Modal
+          show={openStatsModal}
+          onClose={() => setOpenStatsModal(false)}
+          size="5xl"
+          popup
+        >
+          <ModalHeader />
+          <ModalBody>
+            <div className="space-y-4">
+              <h2 className="text-center text-xl font-medium">
+                {statsDeck?.name} | Cards ({statsCards.length})
+              </h2>
 
-      {/* Stats Modal */}
-      <Modal show={openStatsModal} onClose={() => setOpenStatsModal(false)} size="5xl" popup>
-        <ModalHeader />
-        <ModalBody>
-          <div className="space-y-4">
-            <h2 className="text-center text-xl font-medium text-gray-900 dark:text-white">
-              {statsDeck?.name} — Cards ({statsCards.length})
-            </h2>
+              {statsLoading && (
+                <div className="w-full text-center">Loading…</div>
+              )}
+              {statsError && (
+                <div className="w-full text-center text-red-500">
+                  {statsError}
+                </div>
+              )}
 
-            {statsLoading && (
-              <div className="w-full text-center">Loading…</div>
-            )}
-            {statsError && (
-              <div className="w-full text-center text-red-500">{statsError}</div>
-            )}
-
-            {!statsLoading && !statsError && (
-              <div className="max-h-[60vh] overflow-auto rounded-lg shadow min-h-[300px]">
-                <Table hoverable>
-                  <TableHead className="bg-gray-600">
-                    <TableRow>
-                      <TableHeadCell>Front</TableHeadCell>
-                      <TableHeadCell>Back</TableHeadCell>
-                      <TableHeadCell>Rep</TableHeadCell>
-                      <TableHeadCell>Interval (d)</TableHeadCell>
-                      <TableHeadCell>EF</TableHeadCell>
-                      <TableHeadCell>Next Review</TableHeadCell>
-                      <TableHeadCell>Action</TableHeadCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody className="divide-y">
-                    {statsCards.map((c) => (
-                      <TableRow key={c.id} className="bg-white dark:border-gray-700 dark:bg-gray-800">
-                        <TableCell className="whitespace-pre-wrap">{c.front}</TableCell>
-                        <TableCell className="whitespace-pre-wrap">{c.back}</TableCell>
-                        <TableCell>{c.repetition ?? 0}</TableCell>
-                        <TableCell>{c.interval ?? 0}</TableCell>
-                        <TableCell>{Number(c.ef)?.toFixed ? Number(c.ef).toFixed(2) : c.ef}</TableCell>
-                        <TableCell>{c.next_review ? new Date(c.next_review).toLocaleString() : "—"}</TableCell>
-                        <TableCell>
-                          <Button color="failure" size="xs" className="cursor-pointer" onClick={() => handleDeleteCard(c.id)}>
-                            <span className="flex items-center gap-1"><HiTrash /> Delete</span>
-                          </Button>
-                        </TableCell>
+              {!statsLoading && !statsError && (
+                <div>
+                  <Table hoverable>
+                    <TableHead className=" border-b">
+                      <TableRow className="text-white">
+                        <TableHeadCell>Front</TableHeadCell>
+                        <TableHeadCell>ID</TableHeadCell>
+                        <TableHeadCell>Rep</TableHeadCell>
+                        <TableHeadCell>Interval (d)</TableHeadCell>
+                        <TableHeadCell>EF</TableHeadCell>
+                        <TableHeadCell>Next Review</TableHeadCell>
+                        <TableHeadCell>Action</TableHeadCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+                    </TableHead>
+                    <TableBody className="divide-y text-[color:var(--color-text)] [&>tr]:!bg-gray-800 [&>tr:hover]:!bg-gray-700">
+                      {statsCards.map((c) => (
+                        <TableRow
+                          key={c.id}
+                        >
+                          <TableCell className="whitespace-pre-wrap">
+                            {c.front}
+                          </TableCell>
+                          <TableCell className="whitespace-pre-wrap">
+                            {c.id}
+                          </TableCell>
+                          <TableCell>{c.repetition ?? 0}</TableCell>
+                          <TableCell>{c.interval ?? 0}</TableCell>
+                          <TableCell>
+                            {Number(c.ef)?.toFixed
+                              ? Number(c.ef).toFixed(2)
+                              : c.ef}
+                          </TableCell>
+                          <TableCell>
+                            {c.next_review
+                              ? new Date(c.next_review).toLocaleString()
+                              : "—"}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              color="failure"
+                              size="xs"
+                              className="cursor-pointer"
+                              onClick={() => handleDeleteCard(c.id)}
+                            >
+                              <span className="flex items-center gap-1">
+                                <HiTrash /> Delete
+                              </span>
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
 
-            <div className="w-full flex justify-center items-center pt-2">
-              <Button onClick={() => setOpenStatsModal(false)}>Close</Button>
+              <div className="w-full flex justify-center items-center pt-2">
+                <Button
+                  className="bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 text-white hover:bg-gradient-to-br "
+                  onClick={() => setOpenStatsModal(false)}
+                >
+                  Close
+                </Button>
+              </div>
             </div>
-          </div>
-        </ModalBody>
-      </Modal>
-    </div>
+          </ModalBody>
+        </Modal>
+      </div>
     </div>
   );
 }
